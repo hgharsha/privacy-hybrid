@@ -1,0 +1,55 @@
+name: tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with: {python-version: "${{ matrix.python }}"}
+      - run: pip install --require-hashes -r requirements.lock && pip install --require-hashes --no-deps -r requirements-model.txt && pip install -r requirements-dev.txt
+      - name: "Security tests (strict configuration, the mandatory local check stays on)"
+        run: python -m pytest tests/security -q -n auto
+      - name: Full suite
+        run: python -m pytest -q -n auto
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with: {fetch-depth: 0}
+      - name: Commit identity must be a GitHub noreply address (no machine names in public history)
+        if: github.event_name == 'pull_request'
+        run: sh scripts/check_identity.sh "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+      - name: Pull request text must not carry session links
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TEXT: ${{ github.event.pull_request.title }} ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$PR_TEXT" | grep -qiE 'claude\.ai/code|Claude-Session'; then echo "The pull request title or description contains a session link"; exit 1; fi
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with: {python-version: "3.12"}
+      - run: python -m compileall -q src scripts
+      - run: pip install bandit && bandit -q -r src -ll
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7
+        with: {python-version: "3.12"}
+      - name: "requirements.lock must match requirements.txt (run: uv pip compile requirements.txt --universal --generate-hashes --python-version 3.11 -o requirements.lock)"
+        run: |
+          pip install uv
+          uv pip compile requirements.txt --universal --generate-hashes --python-version 3.11 -o /tmp/fresh.lock -q
+          diff <(grep -v '^#' requirements.lock) <(grep -v '^#' /tmp/fresh.lock)
+      - name: Every Action is pinned to a commit
+        run: |
+          ! grep -hE 'uses: [^ ]+@' .github/workflows/*.yml | grep -vE '@[0-9a-f]{40}( |$)'

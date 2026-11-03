@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: privhybrid
+    folder: Private Assistant
+    type: file
+    options:
+      path: /opt/homebrew/var/lib/grafana/dashboards

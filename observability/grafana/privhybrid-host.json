@@ -1,0 +1,367 @@
+{
+ "title": "Private Assistant: this Mac",
+ "uid": "privhybrid-host",
+ "schemaVersion": 39,
+ "version": 3,
+ "refresh": "15s",
+ "time": {
+  "from": "now-3h",
+  "to": "now"
+ },
+ "tags": [
+  "privhybrid"
+ ],
+ "links": [
+  {
+   "title": "All Private Assistant dashboards",
+   "type": "dashboards",
+   "tags": [
+    "privhybrid"
+   ],
+   "asDropdown": true,
+   "includeVars": false,
+   "keepTime": true
+  }
+ ],
+ "panels": [
+  {
+   "id": 1,
+   "title": "CPU used",
+   "type": "gauge",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))",
+     "legendFormat": "cpu",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 75
+       },
+       {
+        "color": "red",
+        "value": 90
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 2,
+   "title": "Memory used",
+   "type": "gauge",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "100 * (node_memory_active_bytes + node_memory_wired_bytes + node_memory_compressed_bytes) / node_memory_total_bytes",
+     "legendFormat": "memory",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 75
+       },
+       {
+        "color": "red",
+        "value": 90
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "description": "Active + wired + compressed. Inactive memory counts as free because macOS can reclaim it."
+  },
+  {
+   "id": 3,
+   "title": "Disk used",
+   "type": "gauge",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/System/Volumes/Data\"} / node_filesystem_size_bytes{mountpoint=\"/System/Volumes/Data\"})",
+     "legendFormat": "disk",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 75
+       },
+       {
+        "color": "red",
+        "value": 90
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 4,
+   "title": "Up since",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 18,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "node_boot_time_seconds * 1000",
+     "legendFormat": "boot",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "unit": "dateTimeAsLocal",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "text"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 5,
+   "title": "CPU over time",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 5,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval])))",
+     "legendFormat": "cpu",
+     "refId": "A",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "min": 0,
+     "max": 100
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 6,
+   "title": "Memory over time",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 5,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "node_memory_active_bytes",
+     "legendFormat": "active",
+     "refId": "A",
+     "instant": false
+    },
+    {
+     "expr": "node_memory_wired_bytes",
+     "legendFormat": "wired",
+     "refId": "B",
+     "instant": false
+    },
+    {
+     "expr": "node_memory_compressed_bytes",
+     "legendFormat": "compressed",
+     "refId": "C",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 7,
+   "title": "Load average",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 13,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "node_load1",
+     "legendFormat": "1 min",
+     "refId": "A",
+     "instant": false
+    },
+    {
+     "expr": "node_load5",
+     "legendFormat": "5 min",
+     "refId": "B",
+     "instant": false
+    },
+    {
+     "expr": "node_load15",
+     "legendFormat": "15 min",
+     "refId": "C",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 8,
+   "title": "Network (Wi-Fi)",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 13,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "rate(node_network_receive_bytes_total{device=\"en0\"}[$__rate_interval])",
+     "legendFormat": "in",
+     "refId": "A",
+     "instant": false
+    },
+    {
+     "expr": "rate(node_network_transmit_bytes_total{device=\"en0\"}[$__rate_interval])",
+     "legendFormat": "out",
+     "refId": "B",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "Bps"
+    },
+    "overrides": []
+   }
+  }
+ ]
+}

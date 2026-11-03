@@ -1,0 +1,1 @@
+try { const d = document.documentElement, t = localStorage.getItem("ph_theme"), k = localStorage.getItem("ph_style"); if (t === "light" || t === "dark") d.dataset.theme = t; if (/^[a-z]+$/.test(k || "")) d.dataset.style = k; } catch (e) {}

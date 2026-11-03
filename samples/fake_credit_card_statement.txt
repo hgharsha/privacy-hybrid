@@ -1,0 +1,16 @@
+Summit Rewards Visa -- Statement (FAKE SAMPLE)
+Cardholder: Daniel Okafor-Reyes
+Mailing address: 88 Harbor View Drive, Apt 301, Seattle, WA 98101
+Email: d.okafor@example.org   Phone: 206-555-0172
+Card: 5555 5555 5555 4444   SSN on file: 987-54-3210
+Statement closing date: 10/15/2026   Payment due: 11/09/2026
+
+10/02  Airline - SkyBridge Air            $412.60
+10/04  Hotel - Pine Ridge Lodge           $289.00
+10/09  Pharmacy - CareWell                 $23.45
+10/11  Streaming - ViewStream              $15.99
+10/13  Electronics - GadgetHub            $249.00
+10/15  Payment received - thank you      -$600.00
+
+Previous balance: $812.40   New balance: $1,201.04
+Minimum payment due: $35.00   Credit limit: $8,000

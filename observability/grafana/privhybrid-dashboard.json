@@ -1,0 +1,392 @@
+{
+ "title": "Private Assistant: overview",
+ "uid": "privhybrid",
+ "schemaVersion": 39,
+ "version": 3,
+ "refresh": "15s",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "tags": [
+  "privhybrid"
+ ],
+ "links": [
+  {
+   "title": "All Private Assistant dashboards",
+   "type": "dashboards",
+   "tags": [
+    "privhybrid"
+   ],
+   "asDropdown": true,
+   "includeVars": false,
+   "keepTime": true
+  }
+ ],
+ "panels": [
+  {
+   "id": 1,
+   "title": "Is everything up?",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "privhybrid_up",
+     "legendFormat": "{{service}}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "1": {
+         "text": "Up",
+         "color": "green"
+        },
+        "0": {
+         "text": "Down",
+         "color": "red"
+        }
+       }
+      }
+     ],
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 1
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "description": "Local model (ollama) and web search. Red means questions of that kind cannot be answered."
+  },
+  {
+   "id": 2,
+   "title": "Answered (all time)",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "sum by (route) (privhybrid_requests_total{outcome=\"ok\"})",
+     "legendFormat": "{{route}}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "green"
+     }
+    },
+    "overrides": []
+   },
+   "description": "local = stayed on this Mac, search = a generic query went to the web, claude = masked text went to Claude."
+  },
+  {
+   "id": 3,
+   "title": "Stopped before sending",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "sum(privhybrid_requests_total{outcome=\"blocked\"})",
+     "legendFormat": "stopped",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "description": "Questions blocked because they held an SSN, card, password or account number. Nothing was sent."
+  },
+  {
+   "id": 4,
+   "title": "Errors",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 0,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "sum(privhybrid_requests_total{outcome=\"error\"})",
+     "legendFormat": "errors",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 5,
+   "title": "Scheduled runs",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 20,
+    "y": 0,
+    "w": 4,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "sum by (status) (privhybrid_scheduled_runs_total)",
+     "legendFormat": "{{status}}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 6,
+   "title": "Questions over time",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 5,
+    "w": 14,
+    "h": 9
+   },
+   "targets": [
+    {
+     "expr": "sum by (route) (increase(privhybrid_requests_total{outcome=\"ok\"}[$__rate_interval]))",
+     "legendFormat": "{{route}}",
+     "refId": "A",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 70,
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "description": "How many answers per period, split by where they were answered."
+  },
+  {
+   "id": 7,
+   "title": "Where answers were made",
+   "type": "piechart",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 14,
+    "y": 5,
+    "w": 10,
+    "h": 9
+   },
+   "targets": [
+    {
+     "expr": "sum by (route) (privhybrid_requests_total{outcome=\"ok\"})",
+     "legendFormat": "{{route}}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "description": "The share that stayed on this Mac versus went out.",
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "values": [
+      "value",
+      "percent"
+     ]
+    },
+    "pieType": "donut"
+   }
+  },
+  {
+   "id": 8,
+   "title": "Average answer time",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 14,
+    "w": 14,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "sum by (route) (rate(privhybrid_request_ms_sum[$__rate_interval])) / sum by (route) (rate(privhybrid_request_ms_count[$__rate_interval]) > 0) / 1000",
+     "legendFormat": "{{route}}",
+     "refId": "A",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s"
+    },
+    "overrides": []
+   },
+   "description": "Seconds per answer. Local models on large files can take a minute or more."
+  },
+  {
+   "id": 9,
+   "title": "Values masked before reaching Claude",
+   "type": "bargauge",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 14,
+    "y": 14,
+    "w": 10,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "sum by (kind) (privhybrid_masked_total)",
+     "legendFormat": "{{kind}}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "description": "Counts only, never the values.",
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient"
+   }
+  },
+  {
+   "id": 99,
+   "title": "Alerts",
+   "type": "alertlist",
+   "gridPos": {
+    "x": 0,
+    "y": 22,
+    "w": 24,
+    "h": 6
+   },
+   "options": {
+    "alertName": "",
+    "dashboardAlerts": false,
+    "maxItems": 10,
+    "showInstances": true,
+    "stateFilter": {
+     "firing": true,
+     "pending": true,
+     "noData": false,
+     "normal": true,
+     "error": true
+    }
+   }
+  }
+ ]
+}

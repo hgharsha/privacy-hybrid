@@ -1,0 +1,287 @@
+{
+ "title": "Private Assistant: privacy",
+ "uid": "privhybrid-privacy",
+ "schemaVersion": 39,
+ "version": 3,
+ "refresh": "15s",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "tags": [
+  "privhybrid"
+ ],
+ "links": [
+  {
+   "title": "All Private Assistant dashboards",
+   "type": "dashboards",
+   "tags": [
+    "privhybrid"
+   ],
+   "asDropdown": true,
+   "includeVars": false,
+   "keepTime": true
+  }
+ ],
+ "panels": [
+  {
+   "id": 1,
+   "title": "Answers that stayed on this Mac",
+   "type": "gauge",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 6
+   },
+   "targets": [
+    {
+     "expr": "100 * sum(privhybrid_requests_total{route=\"local\",outcome=\"ok\"}) / clamp_min(sum(privhybrid_requests_total{route=~\"local|claude\",outcome=\"ok\"}),1)",
+     "legendFormat": "local",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "orange",
+        "value": null
+       },
+       {
+        "color": "green",
+        "value": 80
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "description": "Local answers as a share of local plus Claude answers. Web questions are answered locally too."
+  },
+  {
+   "id": 2,
+   "title": "Sent to Claude (masked)",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 0,
+    "w": 6,
+    "h": 6
+   },
+   "targets": [
+    {
+     "expr": "sum(privhybrid_requests_total{route=\"claude\",outcome=\"ok\"})",
+     "legendFormat": "answers",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "description": "Answers where masked text went to Claude. Names, amounts and dates were replaced by placeholders first."
+  },
+  {
+   "id": 3,
+   "title": "Stopped before sending",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 6,
+    "h": 6
+   },
+   "targets": [
+    {
+     "expr": "sum(privhybrid_requests_total{outcome=\"blocked\"})",
+     "legendFormat": "stopped",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "description": "A tier 1 value (SSN, card, password, account or routing number) was found, so nothing left this Mac."
+  },
+  {
+   "id": 4,
+   "title": "Web searches (generic query only)",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 18,
+    "y": 0,
+    "w": 6,
+    "h": 6
+   },
+   "targets": [
+    {
+     "expr": "sum(privhybrid_requests_total{route=\"search\",outcome=\"ok\"})",
+     "legendFormat": "searches",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "description": "Only a rewritten, generic query goes out, never your data."
+  },
+  {
+   "id": 5,
+   "title": "Claude and stopped requests over time",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 6,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "sum by (route,outcome) (increase(privhybrid_requests_total{route=\"claude\"}[$__rate_interval]))",
+     "legendFormat": "{{route}} {{outcome}}",
+     "refId": "A",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 70,
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 6,
+   "title": "Masked values over time",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 6,
+    "w": 12,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "sum by (kind) (increase(privhybrid_masked_total[$__rate_interval]))",
+     "legendFormat": "{{kind}}",
+     "refId": "A",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 70,
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "description": "What kinds of values were replaced before reaching Claude."
+  },
+  {
+   "id": 7,
+   "title": "Masked values by kind (all time)",
+   "type": "bargauge",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 14,
+    "w": 24,
+    "h": 8
+   },
+   "targets": [
+    {
+     "expr": "sum by (kind) (privhybrid_masked_total)",
+     "legendFormat": "{{kind}}",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "orientation": "horizontal",
+    "displayMode": "gradient"
+   }
+  }
+ ]
+}

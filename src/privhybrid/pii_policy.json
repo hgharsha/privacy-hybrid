@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "note": "Machine-readable form of PII-STANDARD.md. tests/security/test_pii_policy.py checks every row against the detector and the document. tier 1 = block; 2 = placeholder; 3 = financial placeholder; cloud_allowed says whether the masked form may go to a cloud service.",
+  "entities": [
+    {"name": "SSN", "kinds": ["SSN"], "method": "regex + area/group validity", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "My SSN is 123-45-6789", "doc_phrase": "SSN / ITIN"},
+    {"name": "TIN", "kinds": ["GOVID"], "method": "keyword context + regex", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "TIN: 98-7654321", "doc_phrase": "tax ID/EIN"},
+    {"name": "EIN", "kinds": ["GOVID"], "method": "keyword context + regex", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "EIN 12-3456789", "doc_phrase": "tax ID/EIN"},
+    {"name": "Passport", "kinds": ["GOVID"], "method": "keyword context + regex", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "passport number X1234567", "doc_phrase": "passport"},
+    {"name": "Driver's license", "kinds": ["GOVID"], "method": "keyword context + regex", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "driver's license D1234567", "doc_phrase": "driver license"},
+    {"name": "Bank account number", "kinds": ["BANKACCT"], "method": "keyword context + digits", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "account number 123456789012", "doc_phrase": "Bank account"},
+    {"name": "Routing number", "kinds": ["ROUTING"], "method": "keyword context + ABA checksum", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "routing number 021000021", "doc_phrase": "routing"},
+    {"name": "Credit card", "kinds": ["CARD"], "method": "13-19 digits + Luhn", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "card 4111 1111 1111 1111", "doc_phrase": "Full card number"},
+    {"name": "CVV", "kinds": ["CVV"], "method": "keyword context", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "CVV 123", "doc_phrase": "CVV"},
+    {"name": "IBAN", "kinds": ["IBAN"], "method": "mod-97", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "IBAN GB82 WEST 1234 5698 7654 32", "doc_phrase": "IBAN"},
+    {"name": "SWIFT", "kinds": ["SWIFT"], "method": "keyword context + format", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "SWIFT code DEUTDEFF500", "doc_phrase": "SWIFT"},
+    {"name": "API key", "kinds": ["SECRET"], "method": "token patterns", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "key sk-abcdefghijklmnopqrstuvwx", "doc_phrase": "API keys"},
+    {"name": "Password", "kinds": ["SECRET"], "method": "keyword context", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "password: hunter2hunter2", "doc_phrase": "Passwords"},
+    {"name": "Private key", "kinds": ["SECRET"], "method": "PEM header", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "-----BEGIN RSA PRIVATE KEY-----", "doc_phrase": "private keys"},
+    {"name": "Medical information", "kinds": ["MEDICAL", "MEDID"], "method": "keyword context", "tier": 1, "masking": "block", "cloud_allowed": false, "uncertainty_blocks": true, "sample": "Diagnosis: asthma", "doc_phrase": "health diagnoses"},
+    {"name": "Email", "kinds": ["EMAIL"], "method": "regex", "tier": 2, "masking": "[EMAIL_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "write to jane.doe@example.com", "doc_phrase": "Email address"},
+    {"name": "Phone", "kinds": ["PHONE"], "method": "regex", "tier": 2, "masking": "[PHONE_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "call 555-123-4567", "doc_phrase": "Phone number"},
+    {"name": "Address", "kinds": ["ADDRESS"], "method": "regex", "tier": 2, "masking": "[ADDRESS_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "I live at 42 Maple Street", "doc_phrase": "Street address"},
+    {"name": "Date of birth", "kinds": ["DOB"], "method": "keyword context + date", "tier": 2, "masking": "[DOB_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "DOB 01/02/1980", "doc_phrase": "Date of birth"},
+    {"name": "ZIP", "kinds": ["ZIP"], "method": "regex", "tier": 2, "masking": "[ADDRESS_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "Austin, TX 78701", "doc_phrase": "city+ZIP"},
+    {"name": "Employer", "kinds": ["ORG"], "method": "NER + dictionary", "tier": 2, "masking": "[ORG_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "ORG: Initech Corporation", "dictionary": {"Initech Corporation": "ORG"}, "doc_phrase": "Employer"},
+    {"name": "Job title", "kinds": ["TITLE"], "method": "keyword context", "tier": 2, "masking": "[TITLE_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "job title: Staff Engineer", "doc_phrase": "Employer, school"},
+    {"name": "Credit score", "kinds": ["SCORE"], "method": "keyword context", "tier": 3, "masking": "[SCORE_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "my credit score is 712", "doc_phrase": "credit scores"},
+    {"name": "Transaction description", "kinds": ["TXN"], "method": "keyword context", "tier": 3, "masking": "[TXN_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "check number 4821", "doc_phrase": "Transaction descriptions"},
+    {"name": "Merchant name", "kinds": ["MERCHANT"], "method": "user dictionary", "tier": 3, "masking": "[MERCHANT_n]", "cloud_allowed": true, "uncertainty_blocks": false, "sample": "paid Zebra Grocers", "dictionary": {"Zebra Grocers": "MERCHANT"}, "doc_phrase": "Merchant / payee"}
+  ],
+  "quasi_identifiers": [
+    {"name": "city+ZIP", "flag": "city+zip", "sample": "Springfield, 12 Oak Street, 62704"},
+    {"name": "employer+job title", "flag": "title+employer", "sample": "Initech Corporation job title: Staff Engineer", "dictionary": {"Initech Corporation": "ORG"}},
+    {"name": "DOB+location", "flag": "dob+place", "sample": "DOB 01/02/1980, 12 Oak Street"},
+    {"name": "name+financial", "flag": "name+financial", "sample": "Dear Jane Doe, your balance is $4,500.00"},
+    {"name": "medical+location", "flag": "medical+place", "sample": "Diagnosis: asthma, 12 Oak Street"}
+  ],
+  "false_positives": ["Invoice 20261001 totals 4500 units", "Page 123 of 456, version 2.0.1", "Call us at extension 2024", "The meeting is at 10:30 on Tuesday", "Order 12345678 shipped in 3 days"]
+}

@@ -1,0 +1,20 @@
+Lakeview Federal Credit Union -- Monthly Statement (FAKE SAMPLE)
+Account holder: Priya Raghunathan
+Address: 200 Sample Road, Anytown, TX 70002
+Email: priya.raghunathan@example.net   Phone: (972) 555-0134
+Checking account: 4400-8821-6637   Routing: 021000021
+Debit card: 4111 1111 1111 1111   DOB: 03/09/1991
+Statement period: 09/01/2026 - 09/30/2026
+
+09/01  Opening balance                         $3,215.40
+09/03  Payroll - Sample Analytics        +$4,850.00
+09/05  Rent - Oakmont Apartments               -$1,675.00
+09/07  Grocery Mart                              -$142.18
+09/12  Electric - Metro Power                     -$96.75
+09/15  Transfer to savings                       -$500.00
+09/18  Restaurant - Saffron House                -$68.20
+09/22  Gas - Quick Fill                           -$41.30
+09/25  Online order - BookNook                    -$34.99
+09/30  Closing balance                         $4,606.98
+
+Fees this period: $0.00. Interest earned: $0.42.

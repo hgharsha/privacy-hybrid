@@ -1,0 +1,29 @@
+Form W-4 (2026) Employee's Withholding Certificate -- FAKE SAMPLE, NOT A REAL FORM
+
+Step 1: Personal Information
+(a) First name and middle initial: Jordan T.   Last name: Whitaker
+Address: 300 Sample Court, Unit 4B, Anytown, TX 70003
+(b) Social security number: 912-44-8890
+(c) Filing status: Married filing jointly
+
+Step 2: Multiple Jobs or Spouse Works
+Checked: Yes (two jobs total)
+
+Step 3: Claim Dependents
+Qualifying children under age 17: 2 x $2,000 = $4,000
+Other dependents: 1 x $500 = $500
+Total credits: $4,500
+
+Step 4: Other Adjustments
+(a) Other income (not from jobs): $1,200
+(b) Deductions: $3,400
+(c) Extra withholding per pay period: $50
+
+Step 5: Sign Here
+Employee's signature: Jordan T. Whitaker    Date: 01/15/2026
+
+Employers Only
+Employer's name and address: Sample Analytics LLC, 900 Sample Ave, Anytown, TX 70001
+First date of employment: 01/05/2026
+Employer identification number (EIN): 12-3456789
+Contact: hr@example.com, (512) 555-0166

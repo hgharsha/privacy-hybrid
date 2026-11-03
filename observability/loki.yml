@@ -1,0 +1,36 @@
+# Single-process Loki for the audit log (counts, routes and timings; never text). Listens on this Mac only. __VAR__ is filled in by setup.sh.
+auth_enabled: false
+server:
+  http_listen_address: 127.0.0.1
+  http_listen_port: 3100
+  grpc_listen_address: 127.0.0.1
+  grpc_listen_port: 9096
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: __VAR__/loki
+  storage:
+    filesystem:
+      chunks_directory: __VAR__/loki/chunks
+      rules_directory: __VAR__/loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+limits_config:
+  retention_period: 720h
+  volume_enabled: true
+compactor:
+  working_directory: __VAR__/loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+analytics:
+  reporting_enabled: false

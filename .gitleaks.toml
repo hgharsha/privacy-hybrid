@@ -1,0 +1,11 @@
+title = "privacy-hybrid gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic keys used by the tests, and by one file removed long ago. Every other path is scanned."
+paths = [
+  '''^tests/''',
+  '''^src/privhybrid/outbound\.py$''',
+]

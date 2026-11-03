@@ -1,0 +1,248 @@
+{
+ "title": "Private Assistant: scheduled jobs",
+ "uid": "privhybrid-sched",
+ "schemaVersion": 39,
+ "version": 3,
+ "refresh": "15s",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "tags": [
+  "privhybrid"
+ ],
+ "links": [
+  {
+   "title": "All Private Assistant dashboards",
+   "type": "dashboards",
+   "tags": [
+    "privhybrid"
+   ],
+   "asDropdown": true,
+   "includeVars": false,
+   "keepTime": true
+  }
+ ],
+ "panels": [
+  {
+   "id": 1,
+   "title": "Successful runs",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "sum(privhybrid_scheduled_runs_total{status=\"ok\"})",
+     "legendFormat": "ok",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "color": {
+      "mode": "fixed",
+      "fixedColor": "green"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 2,
+   "title": "Failed runs",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "sum(privhybrid_scheduled_runs_total{status=\"failed\"})",
+     "legendFormat": "failed",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   },
+   "description": "A failed run means a sensitive value was found, a model or search was down, or the keychain would not answer. Open Chats for the note."
+  },
+  {
+   "id": 3,
+   "title": "Success rate",
+   "type": "gauge",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "100 * sum(privhybrid_scheduled_runs_total{status=\"ok\"}) / clamp_min(sum(privhybrid_scheduled_runs_total),1)",
+     "legendFormat": "ok",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0",
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 70
+       },
+       {
+        "color": "green",
+        "value": 90
+       }
+      ]
+     },
+     "color": {
+      "mode": "thresholds"
+     }
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 4,
+   "title": "Runs in the last 24h",
+   "type": "stat",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 18,
+    "y": 0,
+    "w": 6,
+    "h": 5
+   },
+   "targets": [
+    {
+     "expr": "sum(increase(privhybrid_scheduled_runs_total[24h]))",
+     "legendFormat": "runs",
+     "refId": "A",
+     "instant": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "noValue": "0"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "id": 5,
+   "title": "Runs over time",
+   "type": "timeseries",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "prom"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 5,
+    "w": 24,
+    "h": 9
+   },
+   "targets": [
+    {
+     "expr": "sum by (status) (increase(privhybrid_scheduled_runs_total[$__rate_interval]))",
+     "legendFormat": "{{status}}",
+     "refId": "A",
+     "instant": false
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "drawStyle": "bars",
+      "fillOpacity": 70,
+      "stacking": {
+       "mode": "normal"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "description": "Counted from the activity log. Each run is one scheduled question."
+  },
+  {
+   "id": 50,
+   "title": "Alerts",
+   "type": "alertlist",
+   "gridPos": {
+    "x": 0,
+    "y": 14,
+    "w": 24,
+    "h": 6
+   },
+   "options": {
+    "alertName": "ScheduledRunsFailing",
+    "dashboardAlerts": false,
+    "maxItems": 5,
+    "showInstances": true,
+    "stateFilter": {
+     "firing": true,
+     "pending": true,
+     "noData": false,
+     "normal": true,
+     "error": true
+    }
+   }
+  }
+ ]
+}

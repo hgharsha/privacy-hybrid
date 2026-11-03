@@ -1,0 +1,40 @@
+// Browser end to end (fake data, real Ollama and Chrome). Start a test server first:
+//   PYTHONPATH=src .venv/bin/python -c "from privhybrid import server; server.serve(port=8799, data_dir='/tmp/ph-e2e').serve_forever()"
+// Run: PW=<path to playwright-core/index.mjs> node scripts/browser_e2e.mjs
+const { chromium } = await import(process.env.PW || 'playwright-core');
+const B = 'http://127.0.0.1:8799';
+const b = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+const p = await b.newPage(); const log = (m) => console.log(m);
+const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
+await p.goto(B); await p.waitForSelector('#login:not([hidden])');
+await p.click('#switchMode'); await p.fill('#email', 'e2e@example.com'); await p.fill('#pw', 'e2e-password-1'); await p.click('#loginBtn');
+await p.waitForSelector('#app:not([hidden])'); log('registered: ' + await p.textContent('#who'));
+await p.setInputFiles('#file', new URL("../samples/maria_statement.txt", import.meta.url).pathname);
+await p.waitForSelector('#docs li'); log('library: ' + await p.textContent('#docs li'));
+await p.fill('#q', 'I want to buy a house in 2028 and my sister Priya is moving in with me.'); await p.press('#q', 'Enter');
+await p.fill('#q', 'Say hello in five words.'); await p.press('#q', 'Enter');
+await p.waitForTimeout(500);
+log('badges right after two sends: ' + (await p.$$eval('.badge', (n) => n.map((x) => x.textContent))).join(' | '));
+await p.waitForFunction(() => [...document.querySelectorAll('.badge')].filter((x) => /Local|Claude/.test(x.textContent)).length >= 2, null, { timeout: 240000 });
+log('badges after: ' + (await p.$$eval('.badge', (n) => n.map((x) => x.textContent))).join(' | '));
+log('chats listed: ' + (await p.$$eval('#chats li', (n) => n.length)));
+await p.waitForFunction(() => document.querySelectorAll('#facts li button').length > 0, null, { timeout: 120000 });
+log('remembers: ' + (await p.$$eval('#facts li', (n) => n.map((x) => x.firstChild.textContent))).join(' | '));
+await p.click('#resetBtn'); log('new chat cleared: ' + (await p.$$eval('#chat .msg', (n) => n.length)) + ' msgs');
+await p.fill('#q', 'What are my plans for 2028? One sentence.'); await p.press('#q', 'Enter');
+await p.waitForFunction(() => document.querySelectorAll('#chat .msg:not(.user)').length >= 1 && /Local|Claude/.test(document.querySelector('.badge')?.textContent), null, { timeout: 240000 });
+log('answer from memory: ' + (await p.textContent('#chat .msg:not(.user)')).slice(0, 200));
+await p.reload(); await p.waitForSelector('#app:not([hidden])'); log('after reload still signed in, chats: ' + await p.$$eval('#chats li', (n) => n.length));
+await p.click('#chats li button'); await p.waitForTimeout(500); log('reopened chat msgs: ' + await p.$$eval('#chat .msg', (n) => n.length));
+await p.click('#logoutBtn'); await p.waitForSelector('#login:not([hidden])');
+await p.fill('#email', 'e2e@example.com'); await p.fill('#pw', 'wrong-password'); await p.click('#loginBtn'); await p.waitForTimeout(500);
+log('wrong pw: ' + await p.textContent('#loginErr'));
+await p.fill('#pw', 'e2e-password-1'); await p.click('#loginBtn'); await p.waitForSelector('#app:not([hidden])');
+log('signed back in; library: ' + await p.$$eval('#docs li', (n) => n.length) + ', facts: ' + await p.$$eval('#facts li button', (n) => n.length));
+await p.click('#acctBtn'); await p.fill('#oldPw', 'e2e-password-1'); await p.fill('#newPw', 'e2e-password-2'); await p.click('#pwForm button[type=submit]'); await p.waitForTimeout(1500);
+log('password: ' + await p.textContent('#pwMsg'));
+p.on('dialog', (d) => d.accept());
+await p.fill('#delPw', 'e2e-password-2'); await p.click('#delForm button[type=submit]'); await p.waitForSelector('#login:not([hidden])'); log('account deleted -> login screen');
+await p.setViewportSize({ width: 390, height: 800 }); await p.reload(); await p.waitForTimeout(300);
+log('phone width overflow: ' + await p.evaluate(() => document.documentElement.scrollWidth > innerWidth));
+log('page errors: ' + JSON.stringify(errs)); await b.close();

@@ -1,0 +1,22 @@
+groups:
+  - name: privhybrid
+    rules:
+      - alert: AssistantDown
+        expr: up{job="privhybrid"} == 0
+        for: 1m
+        annotations: {summary: "The assistant is not answering on its address."}
+      - alert: OllamaDown
+        expr: privhybrid_up{service="ollama"} == 0
+        for: 2m
+        annotations: {summary: "The local model (Ollama) is down. Questions cannot be answered."}
+      - alert: SearchDown
+        expr: privhybrid_up{service="search"} == 0
+        for: 5m
+        annotations: {summary: "Web search is down. Web questions fall back to the local model alone."}
+      - alert: ScheduledRunsFailing
+        expr: increase(privhybrid_scheduled_runs_total{status="failed"}[1h]) >= 1
+        annotations: {summary: "A scheduled job failed in the last hour. Open Schedule and Chats to see why."}
+      - alert: ManyErrors
+        expr: sum(increase(privhybrid_requests_total{outcome="error"}[15m])) >= 3
+        for: 1m
+        annotations: {summary: "Three or more questions ended in an error in the last 15 minutes."}

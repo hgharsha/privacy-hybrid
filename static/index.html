@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Private Assistant">
+<title>Private Assistant</title>
+<link rel="icon" type="image/png" href="/static/mark.png">
+<script src="/static/theme.js"></script>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<section id="login" class="center" hidden>
+  <form id="loginForm" class="card" autocomplete="on">
+    <img class="mark big" src="/static/mark.png" alt="" width="84" height="84">
+    <h1>Private Assistant</h1>
+    <button type="button" class="ghost" id="themeBtn2">Theme: Auto</button>
+    <p class="muted" id="loginHint">Runs on this computer. Sign in with your email.</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" autofocus required>
+    <label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password" minlength="8" required>
+    <button type="submit" id="loginBtn">Sign in</button>
+    <button type="button" class="ghost" id="switchMode">New here? Register</button>
+    <p class="muted"><small id="regNote" hidden>Your email is only a login name. It never leaves this computer. Your files are encrypted with your password, and there is no recovery if you forget it.</small></p>
+    <p id="loginErr" class="err" role="alert"></p>
+  </form>
+</section>
+
+<div id="offline" role="alert" hidden>Can't reach your Mac. Check it is awake and you are on the same Wi-Fi (or Tailscale). Retrying…</div>
+<div id="app" hidden>
+  <header>
+    <img class="mark" src="/static/mark.png" alt="" width="36" height="36">
+    <h1>Private Assistant</h1>
+    <div id="health" class="muted" aria-live="polite"></div>
+    <span id="who" class="muted"></span>
+    <nav id="bar" aria-label="Actions">
+    <button id="panelBtn" class="ghost" type="button" aria-controls="side" aria-expanded="true">Hide panel</button>
+    <button id="auditBtn" class="ghost" type="button">Activity</button>
+    <button id="resetBtn" class="ghost" type="button">New chat</button>
+    <button id="setBtn" class="ghost" type="button">Settings</button>
+    <button id="acctBtn" class="ghost" type="button">Account</button>
+    <button id="themeBtn" class="ghost" type="button" aria-label="Change theme">Theme: Auto</button>
+    <button id="logoutBtn" class="ghost" type="button">Sign out</button>
+    </nav>
+  </header>
+  <main>
+    <button id="sideBtn" class="ghost" type="button" aria-expanded="false">Chats, memory &amp; library</button>
+    <aside aria-label="Files" id="side">
+      <details class="sec" open><summary>Chats</summary>
+      <ul id="chats"></ul>
+      </details>
+      <details class="sec" open><summary>What I remember</summary>
+      <ul id="facts"></ul>
+      </details>
+      <details class="sec" open><summary>My library</summary>
+      <label class="drop" for="file">Add files<br><small>txt, csv, xlsx, json, pdf, docx. Saved encrypted on this computer and searched when you ask.</small></label>
+      <label for="upFolder" class="hint">Put it in folder</label>
+      <select id="upFolder"></select>
+      <input id="file" type="file" multiple class="sr">
+      <ul id="docs"></ul>
+      <label for="scope" class="hint">Answer using</label>
+      <select id="scope"><option value="">All my files</option></select>
+      <p id="scopeTip" class="hint tip"></p>
+      </details>
+      <details class="sec" id="schedSec" hidden open><summary>Schedule</summary>
+      <p id="schedNote" class="hint"></p>
+      <ul id="jobs"></ul>
+      <button type="button" id="schedAdd" class="ghost" hidden>Add a scheduled job</button>
+      <button type="button" id="schedOpt" class="ghost"></button>
+      </details>
+      <details class="sec" open><summary>Mode</summary>
+      <label id="extremeRow"><input type="checkbox" id="extreme"> <b>Extreme privacy</b> <small>the app sends nothing to the web or the cloud, whatever you pick. This is an app setting, not a firewall</small></label>
+      <label id="reviewRow"><input type="checkbox" id="reviewCloud" checked> <b>Review before sending to the cloud</b> <small>shows exactly what leaves and waits for your yes</small></label>
+      <div id="lockRow" hidden><b>Network lockdown (administrator, optional)</b> <small id="lockMsg"></small>
+        <button type="button" id="lockOn">Turn on for the app's user…</button></div>
+      <label id="voiceRow" for="voiceSel"><b>Voice input</b> <small>on this device</small>
+        <select id="voiceSel"><option value="mac">Transcribe on this computer (private)</option><option value="device">Phone or browser dictation (audio goes to Apple or Google)</option></select></label>
+      <fieldset id="modes">
+        <label><input type="radio" name="mode" value="auto" checked> Auto <small>picks the safest route</small></label>
+        <label><input type="radio" name="mode" value="local"> Local only</label>
+        <label><input type="radio" name="mode" value="web"> Local + web facts</label>
+        <label><input type="radio" name="mode" value="claude"> <span id="cloudLabel">Claude (masked)</span></label>
+      </fieldset>
+      </details>
+    </aside>
+    <section id="chat" aria-live="polite"></section>
+  </main>
+  <form id="ask">
+    <div id="samples" hidden>
+      <label for="sampleSel" class="hint">Demo questions</label>
+      <select id="sampleSel"></select>
+    </div>
+    <label for="q" class="sr">Your question</label>
+    <label class="remember"><input type="checkbox" id="remember" checked> Remember</label>
+    <textarea id="q" rows="2" placeholder="Ask something. Private details stay on this computer." required></textarea>
+    <button type="button" id="mic" class="ghost" aria-label="Speak your question" aria-pressed="false" title="Speak your question">🎤</button>
+    <button type="submit" id="send">Send</button>
+    <button type="button" id="stop" class="ghost" hidden>Stop</button>
+  </form>
+</div>
+
+<dialog id="preview">
+  <form method="dialog">
+    <h2>This is what will be sent</h2>
+    <p class="muted" id="pvDest"></p>
+    <div id="pvWarn" class="pvwarn" hidden>
+      <b>The filter is not sure about this text:</b> <span id="pvWarnList"></span>
+      <label class="pvconfirm"><input type="checkbox" id="pvConfirm"> I checked it and still want to send it.</label>
+    </div>
+    <textarea id="pvText" readonly rows="12" style="width:100%"></textarea>
+    <p class="muted">Names, numbers and amounts are replaced by labels like [PERSON_1]; the real values stay on this computer.</p>
+    <div class="row">
+      <button value="no" class="ghost">Don't send</button>
+      <button value="yes" id="pvSend">Send</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="approval">
+  <form method="dialog">
+    <h2>Stopped before sending</h2>
+    <p id="apReason"></p>
+    <p class="muted" id="apKinds"></p>
+    <p>Nothing was sent anywhere. You can answer this on the local model instead.</p>
+    <div class="row">
+      <button value="cancel" class="ghost">Cancel</button>
+      <button value="local" id="apLocal">Run locally</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="schedDlg">
+  <form id="schedForm" class="stack" method="dialog">
+    <h2 id="schedTitle">Scheduled job</h2>
+    <label for="jq">Question</label>
+    <textarea id="jq" rows="3" maxlength="8000" required></textarea>
+    <label for="jmode">Uses</label>
+    <select id="jmode"><option value="web">Public web facts only (no files)</option><option value="local">One folder of my files, on this computer</option></select>
+    <select id="jfolder" hidden></select>
+    <label for="jfreq">Runs</label>
+    <div class="row">
+      <select id="jfreq"><option value="daily">Every day</option><option value="weekly">Every week</option></select>
+      <select id="jday" hidden><option value="0">Mon</option><option value="1">Tue</option><option value="2">Wed</option><option value="3">Thu</option><option value="4">Fri</option><option value="5">Sat</option><option value="6">Sun</option></select>
+      <input id="jtime" type="time" value="07:00" required>
+    </div>
+    <p class="muted">Never uses Claude. Results appear as a chat here, even if you were signed out.</p>
+    <p id="jerr" class="muted" role="alert"></p>
+    <div class="row"><button type="submit">Save</button><button type="button" class="ghost" id="schedCancel">Cancel</button></div>
+  </form>
+</dialog>
+
+<dialog id="schedOptDlg">
+  <form id="schedOptForm" class="stack" method="dialog">
+    <h2 id="optTitle"></h2>
+    <p id="optText"></p>
+    <label for="optPw">Your password</label>
+    <input id="optPw" type="password" autocomplete="current-password" required>
+    <p id="optErr" class="muted" role="alert"></p>
+    <div class="row"><button type="submit" id="optGo">Continue</button><button type="button" class="ghost" id="optCancel">Cancel</button></div>
+  </form>
+</dialog>
+
+<dialog id="pdfDlg">
+  <form id="pdfForm" class="stack" method="dialog">
+    <h2>Password protected PDF</h2>
+    <p id="pdfName" class="muted"></p>
+    <label for="pdfInput">PDF password</label>
+    <input id="pdfInput" type="password" autocomplete="off" maxlength="256">
+    <div class="row"><button type="submit">Open</button><button type="button" class="ghost" id="pdfCancel">Skip</button></div>
+  </form>
+</dialog>
+<dialog id="moveDlg">
+  <form id="moveForm" class="stack" method="dialog">
+    <h2>Move file</h2>
+    <p id="moveName" class="muted"></p>
+    <label for="moveSel">Folder</label>
+    <select id="moveSel"></select>
+    <input id="moveNew" placeholder="New folder name" maxlength="40" hidden>
+    <div class="row"><button type="submit">Move</button><button type="button" class="ghost" id="moveCancel">Cancel</button></div>
+  </form>
+</dialog>
+
+<dialog id="acctDlg">
+  <div class="stack">
+    <h2>Look</h2>
+    <label for="styleSel">Colour style <small>(saved to your account)</small></label>
+    <select id="styleSel">
+      <option value="mac">Mac (blue, Apple-like)</option>
+      <option value="indigo">Indigo</option>
+      <option value="ocean">Ocean</option>
+      <option value="forest">Forest</option>
+      <option value="graphite">Graphite</option>
+      <option value="vision">Vision (indigo glass)</option>
+    </select>
+    <p class="muted hint">Light or dark follows the Theme button in the top bar.</p>
+  </div>
+  <form id="pwForm" class="stack">
+    <h2>Account</h2>
+    <label for="oldPw">Current password</label><input id="oldPw" type="password" autocomplete="current-password" required>
+    <label for="newPw">New password (8+ characters)</label><input id="newPw" type="password" autocomplete="new-password" minlength="8" required>
+    <button type="submit">Change password</button>
+    <p id="pwMsg" class="muted" role="status"></p>
+  </form>
+  <form id="delForm" class="stack">
+    <h2>Delete account</h2>
+    <p class="muted">Erases your library, chats and everything it remembers. This cannot be undone.</p>
+    <label for="delPw">Password</label><input id="delPw" type="password" autocomplete="current-password" required>
+    <button type="submit" class="danger">Delete my account</button>
+  </form>
+  <div class="row"><button type="button" class="ghost" id="acctClose">Close</button></div>
+</dialog>
+
+<dialog id="setDlg">
+  <form id="cfgForm" class="stack">
+    <h2>Settings</h2>
+    <p id="cfgStatus" class="status" role="status"></p>
+    <label for="cfg_answer">Model that answers your questions</label>
+    <select id="cfg_answer"></select>
+    <p class="muted hint">Pick any model you have installed in Ollama. Bigger models answer better but are slower.</p>
+    <details>
+      <summary>Advanced</summary>
+      <div class="stack">
+        <label for="cfg_check">Privacy checker <small>(reads each outgoing message; use a strong model)</small></label>
+        <select id="cfg_check"></select>
+        <p id="remoteWarn" class="status bad" hidden></p>
+        <p id="chkWarn" class="status bad" hidden>This checker looks small (under 14B). Small checkers have missed names and addresses in testing, so more personal detail could reach the cloud. Pick a larger model if you can.</p>
+        <label for="cfg_summary">Summaries</label>
+        <select id="cfg_summary"></select>
+        <label for="cfg_query">Web-search rewriter</label>
+        <select id="cfg_query"></select>
+        <label for="cfg_embed">Library search (embeddings)</label>
+        <select id="cfg_embed"></select>
+        <label for="cfgRuntime">Local model server</label>
+        <select id="cfgRuntime"><option value="ollama">Ollama (tested)</option><option value="local_openai">OpenAI-compatible: LM Studio, llama.cpp, vLLM (not tested)</option></select>
+        <label for="cfgUrl">Local model server address</label>
+        <input id="cfgUrl" type="url" placeholder="http://127.0.0.1:11434">
+        <label for="cfgEmbedUrl">Library search (embeddings) runs on (optional)</label>
+        <input id="cfgEmbedUrl" type="url" placeholder="same as above">
+        <label for="cfgBackups">Backup Ollama addresses (one per line, used if the one above does not answer; optionally add a model name after the address)</label>
+        <textarea id="cfgBackups" rows="3" placeholder="http://192.168.1.20:11434 qwen3.6:35b-a3b-nvfp4"></textarea>
+        <p class="muted hint">This Mac, or an IP address on your own network (another Mac or a Linux box running Ollama). Names and outside addresses are refused. The traffic is not encrypted on the network. Applies to everyone who uses this app.</p>
+      </div>
+    </details>
+    <details id="cloudBox">
+      <summary>Cloud model (for the "masked" mode)</summary>
+      <div class="stack">
+        <label for="cloudProv">Which cloud model gets the masked text?</label>
+        <select id="cloudProv"><option value="claude_cli">Claude (Claude CLI, signed in on this computer)</option><option value="openai_compat">Other: any OpenAI-compatible service (ChatGPT, Grok, OpenRouter, OpenCode, ...)</option></select>
+        <div id="cloudOther" hidden class="stack">
+          <label for="cloudUrl">Service address</label>
+          <input id="cloudUrl" type="url" placeholder="https://api.example.com/v1">
+          <label for="cloudModel">Model name</label>
+          <input id="cloudModel" placeholder="model-name" maxlength="100">
+          <label for="cloudKey">API key <small id="cloudKeyState"></small></label>
+          <input id="cloudKey" type="password" autocomplete="off" placeholder="paste to save or replace">
+          <button type="button" class="ghost" id="cloudKeyClear">Remove saved key</button>
+        </div>
+        <p class="muted hint"><strong>Not tested with real providers yet.</strong> Whatever you choose receives the masked text (names, amounts and dates replaced by placeholders; SSN, card, password and account numbers are never sent). The provider still sees that text and has its own retention and training terms: read them first. Use a key with a spend limit. The key is stored in this computer's keychain, never in a file. Applies to everyone who uses this app.</p>
+      </div>
+    </details>
+    <p id="tlsInfo" class="muted" hidden></p>
+    <div class="row"><button type="button" class="ghost" id="setClose">Close</button><button type="submit">Save</button></div>
+    <p id="cfgMsg" class="muted" role="status"></p>
+  </form>
+</dialog>
+
+<dialog id="auditDlg" class="wide">
+  <form method="dialog">
+    <h2>Activity</h2>
+    <p class="muted">Counts, routes and timings only. No text is ever stored here.</p>
+    <div id="actHealth" class="pills"></div>
+    <div id="actRoutes" class="cards"></div>
+    <p id="actMasked" class="muted"></p>
+    <h3>Recent requests</h3>
+    <div class="tablewrap"><table id="actTable"><thead><tr><th>When</th><th>Route</th><th>Result</th><th>Time</th><th>Masked</th></tr></thead><tbody></tbody></table></div>
+    <details><summary>Raw log</summary><pre id="auditBody"></pre></details>
+    <button value="close">Close</button>
+  </form>
+</dialog>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

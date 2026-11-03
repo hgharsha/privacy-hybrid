@@ -1,0 +1,13 @@
+// Ships only the audit log (route, outcome, timings, masked-kind counts; never question or answer text) to Loki on this Mac.
+local.file_match "audit" {
+  path_targets = [{"__path__" = "__AUDIT__", "job" = "privhybrid-audit"}]
+}
+loki.source.file "audit" {
+  targets    = local.file_match.audit.targets
+  forward_to = [loki.write.local.receiver]
+}
+loki.write "local" {
+  endpoint {
+    url = "http://127.0.0.1:3100/loki/api/v1/push"
+  }
+}
