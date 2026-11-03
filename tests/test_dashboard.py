@@ -19,5 +19,5 @@ def test_dashboard_counts_match_the_tracker():
 
 def test_dashboard_is_self_contained():
     page = bd.build()
-    assert "<script" not in page
+    assert page.count("<script") == page.count('<script type="application/ld+json">') == 1  # only the JSON-LD data block, no code
     assert "src=\"http" not in page.replace("https://github.com/hgharsha/privacy-hybrid/actions", "")

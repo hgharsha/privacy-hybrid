@@ -1,9 +1,10 @@
-# privacy-hybrid
+# privacy-hybrid: a local-first private AI assistant for personal and financial documents
 
-Privacy-first local + cloud assistant for personal and financial data. Private data stays on your computer; Claude only sees masked text; FreeLLMAPI and web search only see generic text.
+privacy-hybrid is an open-source, privacy-first AI assistant that runs on your own computer. Your documents, chats and memory stay local and are answered by a local model (Ollama). When you choose a cloud model, the cloud only sees masked text, and anything that must never leave (SSN, card number, password, bank account or routing number) stops the request. Web search sees only a generic query.
 
-**Security dashboard:** https://hgharsha.github.io/privacy-hybrid/ (generated from `docs/security/REMEDIATION_TRACKER.md`).
+Its main idea is the combination of local data control, selective cloud access, sensitive-data masking and several independent layers of checks, so a strong cloud model can help with a bank statement or tax paper without learning who you are.
 
+**Security dashboard:** https://hgharsha.github.io/privacy-hybrid/ (generated from `docs/security/REMEDIATION_TRACKER.md`; a self-assessment, not an independent audit).
 - FAQ and known limits: FAQ.md. Plan: PLAN.md. Data rules: PII-STANDARD.md (conditionally approved). Threats: docs/THREAT-MODEL.md. Proof: VERIFY.md.
 - How data flows (pictures): docs/DATA-FLOW.md. Install and share: Quick start below; VERIFY.md "Run it" for the by-hand run. Verify: `./scripts/verify.sh`.
 - Code: src/privhybrid (detect, vault, egress, local, ingest, pipeline, server), static/ (web UI), tests/ (fake data only).
@@ -14,7 +15,7 @@ This is a personal project, shared in case someone finds it useful. It is free (
 
 ## How data flows
 
-![Data flow overview](docs/diagrams/overview.png)
+![Data flow: private data stays on your computer; only masked text or a generic search query leaves](docs/diagrams/overview.png)
 
 Everything private stays on the system that runs the assistant. Only a generic search query or masked text ever leaves it. The full set of diagrams (one question step by step, what is stored, scheduled jobs, network, monitoring) is in [docs/DATA-FLOW.md](docs/DATA-FLOW.md).
 
@@ -26,6 +27,46 @@ The cloud step uses Claude by default. You can point it at any OpenAI-compatible
 
 Typical uses: summarise a statement, draft an email about an invoice, compare your savings to current public rates, ask questions about a file, all without the cloud ever seeing who you are.
 
+## Who it is for, and what it is not
+
+For people who want AI help with personal or financial documents (bank and card statements, invoices, tax forms) and want to keep control of where that data goes: privacy-minded individuals, households sharing one computer, and tinkerers running local models. It is not a security product, not independently audited, and not a guarantee that nothing can leak; see "Use at your own risk" above and the known limits in [FAQ.md](FAQ.md).
+
+## Layers of protection
+
+1. **Local first.** Library, search index, chats and memory are encrypted per user on disk and answered by a local model on this computer.
+2. **Detect and block.** SSNs, card numbers, passwords, and bank account and routing numbers are never sent; the request stops and asks you.
+3. **Mask.** Names, addresses, amounts and similar details become placeholders (`[PERSON_1]`) before any cloud step, then are restored in the answer.
+4. **Recheck and local privacy check.** The masked text is scanned again and a local model looks for anything the rules missed. Bigger local models do better here.
+5. **You confirm.** Review before sending shows the exact text; text that might still be sensitive forces a second confirmation.
+6. **Network limits.** The app itself can only reach this computer; an optional operating-system firewall setup and separate-user testing add a second wall. Details and limits: [docs/SECURITY.md](docs/SECURITY.md).
+
+Every layer has known limits and none is a guarantee. The status of each reviewed weakness is on the [security dashboard](https://hgharsha.github.io/privacy-hybrid/).
+
+## Supported platforms and models
+
+| Area | Status |
+|---|---|
+| macOS | Tested |
+| Linux (Ubuntu) | Tested; scheduled jobs need a desktop keychain |
+| Windows | Written, **not tested** |
+| Local models | Ollama (tested). LM Studio, llama.cpp, vLLM: experimental, not tested against real servers |
+| Cloud model | Claude through the Claude CLI (default, tested) |
+| Other cloud services (ChatGPT, Grok, OpenRouter, ...) | Supported through an OpenAI-compatible setting, **not tested with real providers** |
+
+Source and tests are the reference: `src/privhybrid/`, `tests/`, and [VERIFY.md](VERIFY.md).
+
+## Frequently asked questions
+
+**Does my data go to the cloud?** Only if you pick a cloud mode, and then only masked text. Sensitive items stop the request. Local mode sends nothing anywhere.
+
+**Is it safe?** It adds several layers of protection, but masking can miss things and the project is not independently audited. Read the limits first.
+
+**Do I need a GPU or Ollama?** You need Ollama and a local model; larger models (14B and up) catch more in the privacy check.
+
+**Can I use ChatGPT or OpenRouter instead of Claude?** The setting exists but is untested with real providers.
+
+More answers: [FAQ.md](FAQ.md). Contributing: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## All data in this repo is fake
 
 Every name, number, SSN, card, account, address and statement in this repository (tests, `samples/`, `TESTING.md`, docs) is invented test data. Card numbers are standard test numbers; SSNs and phone numbers are made up. No real person's information is stored here. Do not add real data to the repo: `state/` and `logs/` (accounts, dictionary, audit log) are gitignored for that reason.
@@ -36,11 +77,11 @@ All data shown is the fake sample files in `samples/`.
 
 | Library and modes | Local answer with the flow tracker |
 |---|---|
-| ![Library](docs/screenshots/1-library.png) | ![Local answer](docs/screenshots/2-local-answer.png) |
+| ![Library of fake sample files and chat modes](docs/screenshots/1-library.png) | ![A local answer with the step-by-step flow tracker](docs/screenshots/2-local-answer.png) |
 
 | Stopped before sending | Activity (counts and timings only) |
 |---|---|
-| ![Stopped](docs/screenshots/3-stopped.png) | ![Activity](docs/screenshots/4-activity.png) |
+| ![Request stopped before sending because sensitive data was found](docs/screenshots/3-stopped.png) | ![Activity panel with counts and timings only](docs/screenshots/4-activity.png) |
 
 The tracker under "What happened" shows each step of a request. Green steps stay on your computer, orange ones leave it.
 
