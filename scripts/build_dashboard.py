@@ -158,6 +158,7 @@ def build():
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>privacy-hybrid security dashboard: local-first private AI assistant</title>
 <meta name="description" content="{DESC}">
 <link rel="canonical" href="{SITE}">
+<meta name="google-site-verification" content="9Se4N0s4lD73QhJopCAVuRKs_XI89x92dw-YncTqJ4I">
 <meta property="og:type" content="website"><meta property="og:title" content="privacy-hybrid security dashboard">
 <meta property="og:description" content="{DESC}"><meta property="og:url" content="{SITE}">
 <meta name="twitter:card" content="summary"><meta name="twitter:title" content="privacy-hybrid security dashboard">
