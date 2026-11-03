@@ -2,8 +2,9 @@
 """Build a static security dashboard from docs/security/REMEDIATION_TRACKER.md.
 
 Usage: python scripts/build_dashboard.py [out_dir]   (default: _site)
-No dependencies, no JavaScript, no external requests. The tracker stays the source of truth.
+No dependencies, no JavaScript (one JSON-LD data block for search engines), no external requests. The tracker stays the source of truth.
 """
+import json
 import html
 import re
 import sys
@@ -13,6 +14,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TRACKER = ROOT / "docs/security/REMEDIATION_TRACKER.md"
 REPO = "hgharsha/privacy-hybrid"
+SITE = "https://hgharsha.github.io/privacy-hybrid/"
+DESC = ("Security self-assessment of privacy-hybrid, an open-source local-first AI assistant for personal and financial documents: "
+        "what protects your data, known limits, and the status of every finding. Not an independent audit.")
 
 STATUS_COLORS = {"Closed": "#2da44e", "Mostly fixed": "#bf8700", "Open": "#cf222e", "Accepted": "#6e7781"}
 PRIO_COLORS = {"P1": "#cf222e", "P2": "#bf8700", "P3": "#0969da"}
@@ -144,8 +148,21 @@ def build():
     badge = lambda wf: (f'<a href="https://github.com/{REPO}/actions/workflows/{wf}">'
                         f'<img alt="{wf}" src="https://github.com/{REPO}/actions/workflows/{wf}/badge.svg?branch=main"></a>')
 
+    LD = json.dumps({"@context": "https://schema.org", "@type": "WebPage", "name": "privacy-hybrid security dashboard",
+                     "url": SITE, "description": DESC, "inLanguage": "en",
+                     "about": {"@type": "SoftwareSourceCode", "name": "privacy-hybrid",
+                               "codeRepository": f"https://github.com/{REPO}", "license": "https://opensource.org/licenses/MIT",
+                               "programmingLanguage": "Python",
+                               "description": "Open-source, local-first AI assistant for personal and financial documents with masking before any cloud step."}}).replace("<", "\\u003c")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>privacy-hybrid security dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>privacy-hybrid security dashboard: local-first private AI assistant</title>
+<meta name="description" content="{DESC}">
+<link rel="canonical" href="{SITE}">
+<meta property="og:type" content="website"><meta property="og:title" content="privacy-hybrid security dashboard">
+<meta property="og:description" content="{DESC}"><meta property="og:url" content="{SITE}">
+<meta name="twitter:card" content="summary"><meta name="twitter:title" content="privacy-hybrid security dashboard">
+<meta name="twitter:description" content="{DESC}">
+<script type="application/ld+json">{LD}</script>
 <style>
 :root{{color-scheme:light dark;--bg:#fff;--fg:#1f2328;--card:#f6f8fa;--line:#d0d7de}}
 @media(prefers-color-scheme:dark){{:root{{--bg:#0d1117;--fg:#e6edf3;--card:#161b22;--line:#30363d}}}}
@@ -202,4 +219,6 @@ if __name__ == "__main__":
     out = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "_site")
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(build())
+    (out / "sitemap.xml").write_text(f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>{SITE}</loc></url></urlset>\n')
+    (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE}sitemap.xml\n")
     print(f"wrote {out / 'index.html'}")
