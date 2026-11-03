@@ -5,7 +5,7 @@
 | Repository | [`hgharsha/privacy-hybrid`](https://github.com/hgharsha/privacy-hybrid) (public, production) |
 | Baseline assessed commit (before fixes) | `40638c60c9286b65a231c3ac19ca3b5a5c6a2428`, `main`, 2026-11-01 18:28 -0600 |
 | Also run against | private development commit `229a6b9aec2ed62b633c5e9ed103dc1f28d52cd8` (same `src/`, `tests/`, `scripts/`, `static/`, `.github/`; four non-code files differ) |
-| Assessment date | 2026-11-01 |
+| Assessment date | 2026-11-01 (baseline); last updated 2026-11-03 |
 | Latest code state | public `aec65d472e3c746a177568ce0f97bcd0ea7b3b5a`, private `fc02867`. Latest public HEAD `77a6166117d7d7f7c19b1afcccae6835cc3354fd` (private HEAD `a64589b`). Every commit after the code state (public `d51ea35`, `4dbb63e`, `77a6166`; private `a99b9ec`, `5a5bf13`, `c16f0a2`, `a64589b`) is **documentation-only**. The PH-008 check (`lockdown.py`, `server.py`, tests) and the PH-020 hardening were added after that code state and are covered by the tracker. See the final decision at the end of section 0. |
 | Assessor | The project's AI coding assistant (Claude), working at the repository owner's request |
 | Companion documents | [THREAT_MODEL.md](THREAT_MODEL.md), [FINDINGS.md](FINDINGS.md), [TEST_EVIDENCE.md](TEST_EVIDENCE.md), [REMEDIATION_TRACKER.md](REMEDIATION_TRACKER.md) |
@@ -43,6 +43,8 @@ Residuals and new caveats from the fixes themselves:
 **Conclusion after re-assessment: still CONDITIONAL PASS.** No Critical or High finding was present before or after. The detection gaps (PH-001/002), rollback (PH-006), scheduler defect (PH-007), plain HTTP (PH-005) and dependency pinning (PH-014) are closed in code with green CI. What keeps it from PASS (PH-008 and PH-020 have since been closed, see below): the other unverified claims (local second-pass model efficacy, Keychain access control, `pf` enforcement, no independent testing), and the fact that this is a self-check by the assistant that wrote the fixes.
 
 ### Final decision (2026-11-02, second look; tests re-run locally, CI and scanners not re-run)
+
+**Addendum (2026-11-03, CI re-run):** after this entry, the `tests` workflow (which includes bandit) and the `security-scan` workflow (gitleaks history scan, pip-audit on `requirements.lock`) passed on public `main`, as did the dashboard workflow. This narrows the "not re-run" note below to the time of the 2026-11-02 entry. It does not change the verdict (Conditional Pass), the counts (18 Closed, 2 Accepted, 0 Open) or the unverified items listed above. The review is still not independent.
 
 Evidence: code re-read for PH-008 and PH-020; the full suite was run locally on the working tree (641 passed, see [TEST_EVIDENCE.md](TEST_EVIDENCE.md) section 10). bandit and pip-audit were not run. The review is still not independent: it was done by the same assistant that made the fixes.
 
