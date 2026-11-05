@@ -169,3 +169,18 @@ def test_audit_log_rotates_and_keeps_the_chain(tmp_path, monkeypatch):
     first = json.loads(path.read_text().splitlines()[0])
     newest = max(archives, key=lambda p: int(p.name[12:]))
     assert first["prev"] == hashlib.sha256(newest.read_bytes().splitlines()[-1]).hexdigest()  # chain continues across the rotation
+
+
+def test_refused_connection_is_unreachable_with_and_without_a_cancel_token():
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    port = s.getsockname()[1]
+    s.close()
+    url = f"http://127.0.0.1:{port}/api/chat"
+    for token in (None, providers.Cancel()):
+        providers.ACTIVE.cancel = token
+        try:
+            with pytest.raises(providers.Unreachable):
+                providers._post(url, {}, {}, 2, "Ollama")
+        finally:
+            providers.ACTIVE.cancel = None
