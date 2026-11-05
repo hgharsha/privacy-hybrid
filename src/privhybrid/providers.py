@@ -4,6 +4,7 @@
 Tiers: local (Ollama), free (free cloud), claude (subscription CLI), paid (billed per token).
 Callers get a Reply or one of the typed errors below; keys never appear in errors.
 """
+import errno
 import http.client
 import ipaddress
 import json
@@ -278,6 +279,9 @@ def default_base_url(provider: str) -> str:
     }.get(provider, "")
 
 
+_NO_ROUTE = {errno.ENETUNREACH, errno.EHOSTUNREACH, errno.ENETDOWN, errno.EHOSTDOWN}
+
+
 def _post(url: str, headers: Dict[str, str], body: Dict[str, Any], timeout: float, who: str) -> Dict[str, Any]:
     if not url.startswith(("http://", "https://")):
         raise BadReply(f"{who}: only http(s) addresses are allowed")
@@ -298,7 +302,11 @@ def _post(url: str, headers: Dict[str, str], body: Dict[str, Any], timeout: floa
         raise BadReply(f"{who} returned HTTP {exc.code}")
     except urllib.error.URLError as exc:
         raise Unreachable(f"Cannot reach {who} ({exc.reason})")
+    except (ConnectionRefusedError, socket.gaierror) as exc:  # the stoppable path has no URLError wrapper
+        raise Unreachable(f"Cannot reach {who} ({type(exc).__name__})")
     except (TimeoutError, OSError) as exc:
+        if not isinstance(exc, TimeoutError) and getattr(exc, "errno", None) in _NO_ROUTE:
+            raise Unreachable(f"Cannot reach {who} ({type(exc).__name__})")
         raise Unavailable(f"{who} did not answer in time ({type(exc).__name__})")
     except ValueError:
         raise BadReply(f"{who} sent a reply that is not JSON")
