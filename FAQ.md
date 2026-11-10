@@ -120,14 +120,14 @@ A key is stored in this Mac's Keychain so jobs can run while you are signed out.
 Local jobs read a copy of the folder, refreshed whenever you change your library and shown with its time. Deleting a file removes it from the copy at once.
 
 **Does it work on Linux and Windows?**
-The app does (Ubuntu tested). Scheduled jobs need the system keychain (macOS Keychain, Windows Credential Locker, or a desktop's Secret Service on Linux). A headless Linux server has none, so turning them on is refused there. Windows is untested.
+The app does (Ubuntu tested). Scheduled jobs need the system keychain (macOS Keychain, Windows Credential Locker, or a desktop's Secret Service on Linux). A headless Linux server has none, so turning them on is refused there. Windows 11 was tested once (the app, install and tests); scheduled jobs on Windows are not tested.
 
 **What if the Python or the venv is rebuilt?**
 A rebuilt venv on the same Python still reads the key. A Python upgrade that changes the interpreter may make macOS ask for permission, which blocks unattended runs until you turn scheduled jobs off and on again.
 
 ## Install as an app
 
-`python3 scripts/install.py` sets up the environment, starts the assistant at login and adds an app icon that opens it in its own window (Mac: launchd and `~/Applications/Private Assistant.app`; Linux: a `systemd --user` service and a menu entry; Windows: a scheduled task and a Start menu shortcut, untested). No admin rights. `--dry-run` shows what it would do, `--uninstall` removes it (your data in `state/` stays), `--scheduler` turns on scheduled jobs, `--metrics` serves `/metrics` for monitoring, `--tls` serves HTTPS with a local certificate. It needs Ollama installed first (https://ollama.com), and Python 3.11 to 3.13 (on a newer Python it uses `uv` to fetch 3.12 if `uv` is installed).
+`python3 scripts/install.py` sets up the environment, starts the assistant at login and adds an app icon that opens it in its own window (Mac: launchd and `~/Applications/Private Assistant.app`; Linux: a `systemd --user` service and a menu entry; Windows 11: a Startup-folder entry and a Start menu shortcut, tested once). No admin rights. `--dry-run` shows what it would do, `--uninstall` removes it (your data in `state/` stays), `--scheduler` turns on scheduled jobs, `--metrics` serves `/metrics` for monitoring, `--tls` serves HTTPS with a local certificate. It needs Ollama installed first (https://ollama.com), and Python 3.11 to 3.13 (on a newer Python it uses `uv` to fetch 3.12 if `uv` is installed).
 
 **I can't find the app in Finder or Launchpad.** The installer puts it in your personal Applications folder, `~/Applications/Private Assistant.app`, which the Applications entry in Finder's sidebar does not show. Spotlight (Cmd+Space) finds it by the name "Private Assistant" (not "privacy hybrid"). To list it under Applications and Launchpad too, run `ln -s ~/Applications/"Private Assistant.app" /Applications/` (remove that link with `rm "/Applications/Private Assistant.app"` if you uninstall), or drag the app to the Dock.
 
@@ -213,5 +213,5 @@ With `PRIVHYBRID_DEMO=1` (loopback only), opening `/demo` signs in to a shared t
 - Scheduled jobs that use Claude or another cloud model.
 - Cloud providers other than OpenAI-compatible ones (for example Anthropic's own API).
 - Real-provider testing of the OpenAI-compatible route.
-- Windows install and scheduled jobs on Windows (written, untested).
+- Scheduled jobs on Windows, and Windows versions other than the one tested (Windows 11).
 - Automatic certificate renewal (re-run the installer with `--tls` after deleting `state/tls/`).
