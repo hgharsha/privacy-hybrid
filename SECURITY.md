@@ -30,7 +30,7 @@ The full guide is [docs/SECURITY.md](docs/SECURITY.md). In short:
 - The in-app guard is Python-level. Without the OS lockdown, other processes on the computer are not restricted by it.
 - A model on another computer on your network is plain HTTP unless you tunnel or use HTTPS.
 - Scanned images without a text layer are not supported.
-- File locking uses `flock` and is supported on macOS and Linux. On Windows it only protects threads inside one process.
+- File locking uses `flock` on macOS and Linux and a byte-range lock (`msvcrt`) on Windows. Owner-only access uses file modes on macOS and Linux and `icacls` on Windows.
 
 Nothing here is a claim that the app is fully secure or that data cannot leak. The controls reduce risk; they do not remove it.
 

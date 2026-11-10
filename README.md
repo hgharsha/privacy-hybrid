@@ -48,7 +48,7 @@ Every layer has known limits and none is a guarantee. The status of each reviewe
 |---|---|
 | macOS | Tested |
 | Linux (Ubuntu) | Tested; scheduled jobs need a desktop keychain |
-| Windows | Written, **not tested** |
+| Windows 11 | Tested once (install, app, tests, privacy checks; owner-only files via `icacls`). Scheduled jobs, HTTPS for other devices and other Windows versions: not tested |
 | Local models | Ollama (tested). LM Studio, llama.cpp, vLLM: experimental, not tested against real servers |
 | Cloud model | Claude through the Claude CLI (default, tested) |
 | Other cloud services (ChatGPT, Grok, OpenRouter, ...) | Supported through an OpenAI-compatible setting, **not tested with real providers** |
@@ -92,7 +92,7 @@ The tracker under "What happened" shows each step of a request. Green steps stay
 ## Quick start (installs it as an app)
 
 1. Install [Ollama](https://ollama.com) and pull the models: `ollama pull gemma4:26b` and `ollama pull nomic-embed-text`.
-2. Run `python3 scripts/install.py`. It sets up the environment, starts the assistant at login and adds an app icon (Mac, Linux; Windows is untested). On a Mac the app is `~/Applications/Private Assistant.app`: find it with Spotlight ("Private Assistant"); the FAQ shows how to list it under Applications too. `--dry-run` shows what it would do, `--uninstall` removes it. Your data in `state/` stays.
+2. Run `python3 scripts/install.py`. It sets up the environment, starts the assistant at login and adds an app icon (Mac, Linux, Windows 11; no admin rights needed. Windows starts it from your Startup folder and adds a Start menu entry). On a Mac the app is `~/Applications/Private Assistant.app`: find it with Spotlight ("Private Assistant"); the FAQ shows how to list it under Applications too. `--dry-run` shows what it would do, `--uninstall` removes it. Your data in `state/` stays.
 3. Open the app (or http://127.0.0.1:8765/) and register with an email and password. The first account is the admin: only it can open Settings and Activity.
 
 ## Set it up with an AI coding agent (Claude Code, Codex)
@@ -132,7 +132,7 @@ Registration is by invitation, but anyone with a code can use your computer's mo
 6. Optional demo link: `PRIVHYBRID_DEMO=1` and open `/demo` for a shared throwaway account reset to the fake samples on every visit. Never enable it on a server holding real data. It refuses to start on anything but 127.0.0.1.
 7. Optional metrics: `PRIVHYBRID_METRICS=1` serves `GET /metrics` (Prometheus format) to programs on this machine only. Counts only, never text. The **Activity** button shows the same numbers with no extra setup.
 8. Optional scheduled jobs: `PRIVHYBRID_SCHEDULER=1` (see FAQ.md and docs/SCHEDULED-JOBS-DESIGN.md). Needs the system keychain (macOS Keychain today); each account opts in.
-9. Start: `PYTHONPATH=src .venv/bin/python -m privhybrid.server`, open it and register.
+9. Start: `PYTHONPATH=src .venv/bin/python -m privhybrid.server`, open it and register. On Windows use `.venv\Scripts\python.exe` and install the spaCy model with `pip install -r requirements-model.txt`.
 
 ## Accounts and personal library
 
