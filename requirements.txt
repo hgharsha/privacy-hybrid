@@ -1,7 +1,7 @@
 presidio_analyzer==2.2.366
 cryptography==50.0.2
 spacy==3.8.18
-pypdf==6.21.4
+pypdf==7.0.0
 click==8.5.0
 keyring==25.7.0
 faster-whisper==1.2.1
