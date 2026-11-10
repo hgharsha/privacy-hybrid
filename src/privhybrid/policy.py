@@ -4,6 +4,7 @@ Nothing caches it: every check reads the file again, so a change made in one ses
 background thread and scheduled job at once. If the file cannot be read or decrypted the answer is "unknown", and callers treat
 unknown as Extreme privacy on (cloud and web stay blocked).
 """
+from . import fsutil
 import threading
 from typing import Any
 
@@ -38,8 +39,8 @@ def _mark_seen(acct: Any, ver: int, force: bool = False) -> None:
         p = _seen_path(acct)
         tmp = p.with_name(p.name + ".tmp")
         tmp.write_text(str(ver))
-        tmp.chmod(0o600)
-        tmp.replace(p)
+        fsutil.private(tmp, 0o600)
+        fsutil.replace(tmp, p)
     except OSError:
         pass  # the check is then weaker, never stricter than before
 

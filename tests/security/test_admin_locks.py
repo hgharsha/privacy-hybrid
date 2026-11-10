@@ -160,6 +160,7 @@ def test_stale_version_rejected_across_handles(store):
     assert a.load("f.bin", None) == {"x": 2}
 
 
+@pytest.mark.skipif(os.name == "nt", reason="mode bits do not exist on Windows; see test_windows_acl")
 def test_password_change_keeps_files_readable_and_private(store):
     a = store.register("a@example.com", PW)
     a.save("notes.bin", {"k": "v"})

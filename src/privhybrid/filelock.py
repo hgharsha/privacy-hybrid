@@ -3,7 +3,7 @@
 Re-entrant for one thread (a nested `with` on the same path only counts up). A lock that cannot be taken within `timeout` seconds raises
 LockTimeout instead of waiting forever. The operating system releases a flock when its process ends, so a killed process never leaves a stale lock.
 Lock order, to avoid deadlocks: the store lock (`.store.lock`) first, then one account lock (`.<id>.lock`); never the other way round.
-Supported: macOS and Linux (fcntl). On Windows there is no flock: the lock then only covers threads of one process (documented in docs/SECURITY.md).
+Supported: macOS and Linux (fcntl) and Windows (msvcrt byte-range lock, also released when the process ends).
 """
 import os
 import threading
@@ -15,6 +15,11 @@ try:
     import fcntl
 except ImportError:  # Windows
     fcntl = None
+
+try:
+    import msvcrt
+except ImportError:  # macOS, Linux
+    msvcrt = None
 
 DEFAULT_TIMEOUT = 15.0
 _local = threading.local()
@@ -50,12 +55,15 @@ def locked(path, timeout: float = DEFAULT_TIMEOUT):
         raise LockTimeout(f"could not take {path.name} within {timeout:g}s")
     fd = None
     try:
-        if fcntl is not None:
+        if fcntl is not None or msvcrt is not None:
             fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
             end = time.monotonic() + timeout
             while True:
                 try:
-                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    if fcntl is not None:
+                        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    else:
+                        msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
                     break
                 except OSError:
                     if time.monotonic() >= end:

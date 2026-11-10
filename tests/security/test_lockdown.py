@@ -61,6 +61,7 @@ def test_off_and_unconfirmed_are_refused(srv, net, fake):
     assert Fake.calls == []
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="macOS only")
 def test_on_runs_only_the_fixed_script_with_the_macos_prompt(srv, net, fake, monkeypatch):
     monkeypatch.setattr(lockdown, "script_is_trusted", lambda *_: True)  # the real checkout is user-owned and correctly refused (see PH-008 tests)
     a = admin(srv)
@@ -152,6 +153,7 @@ def test_request_on_never_starts_osascript_for_an_untrusted_script(fake, monkeyp
     assert lockdown.request_on("phsvc") is False and Fake.calls == []
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="macOS only")
 def test_request_on_runs_osascript_only_after_the_check_passes(fake, monkeypatch):
     monkeypatch.setattr(lockdown, "script_is_trusted", lambda *_: True)
     assert lockdown.request_on("phsvc") is True and len(Fake.calls) == 1

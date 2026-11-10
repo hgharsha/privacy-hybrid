@@ -237,9 +237,10 @@ def install_linux(r: Runner, bind: str, scheduler: bool, url: str, port: str, me
 def install_windows(r: Runner, bind: str, scheduler: bool, url: str, port: str, metrics: bool = False, tls: bool = False) -> None:
     base = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "privhybrid"
     r.write(base / "run.cmd", windows_runner(ROOT, bind, scheduler, port, metrics, tls))
-    r.run(["schtasks", "/Create", "/F", "/SC", "ONLOGON", "/TN", "PrivacyHybrid", "/TR", f'"{base / "run.cmd"}"'])
-    r.run(["schtasks", "/Run", "/TN", "PrivacyHybrid"], check=False)
     menu = Path(os.environ.get("APPDATA", str(Path.home()))) / "Microsoft/Windows/Start Menu/Programs"
+    # a per-user Startup entry starts it at login without administrator rights (a scheduled task at logon needs them)
+    r.write(menu / "Startup" / f"{NAME} (start at login).cmd", f'@echo off\r\nstart "" /min "{base / "run.cmd"}"\r\n')
+    r.run(["cmd", "/c", "start", "", "/min", str(base / "run.cmd")], check=False)
     r.write(menu / f"{NAME}.cmd", windows_launcher(url))
 
 
@@ -286,7 +287,8 @@ def uninstall(r: Runner) -> None:
         r.run(["schtasks", "/Delete", "/F", "/TN", "PrivacyHybrid"], check=False)
         local, roaming = os.environ.get("LOCALAPPDATA"), os.environ.get("APPDATA")
         targets = ([Path(local) / "privhybrid"] if local else []) + \
-                  ([Path(roaming) / "Microsoft/Windows/Start Menu/Programs" / f"{NAME}.cmd"] if roaming else [])
+                  ([Path(roaming) / "Microsoft/Windows/Start Menu/Programs" / f"{NAME}.cmd",
+                   Path(roaming) / "Microsoft/Windows/Start Menu/Programs/Startup" / f"{NAME} (start at login).cmd"] if roaming else [])
     for t in targets:
         r.say(f"remove {t}")
         if not r.dry:
