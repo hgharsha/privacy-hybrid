@@ -1,5 +1,6 @@
 """Local HTTPS for the LAN link: a throwaway certificate authority signs one server certificate, then its private key is discarded,
 so nothing on disk can mint other certificates. Install ca.crt on the devices that should trust this server (AirDrop it to a phone)."""
+from . import fsutil
 import argparse
 import datetime
 import ipaddress
@@ -47,7 +48,8 @@ def make(folder: Path, ips: List[str], now: datetime.datetime = None) -> Path:
     kf = folder / "server.key"
     kf.touch(mode=0o600)
     kf.write_bytes(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
-    os.chmod(kf, 0o600)
+    fsutil.private(kf, 0o600)
+    fsutil.private(folder, 0o700)
     return folder
 
 

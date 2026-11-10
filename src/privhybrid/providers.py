@@ -6,6 +6,7 @@ Callers get a Reply or one of the typed errors below; keys never appear in error
 """
 import errno
 import http.client
+import io
 import ipaddress
 import json
 import os
@@ -312,12 +313,44 @@ def _post(url: str, headers: Dict[str, str], body: Dict[str, Any], timeout: floa
         raise BadReply(f"{who} sent a reply that is not JSON")
 
 
+class _PollSock:
+    """Wraps a socket so a blocked read notices Stop. On Windows a shutdown() or close() from another thread does not
+    wake a pending recv (POSIX does), so the read polls with a short timeout and checks the cancel token between tries."""
+    _POLL = 0.2
+
+    def __init__(self, sock, token: "Cancel", deadline: float) -> None:
+        self._s, self._token, self._deadline = sock, token, deadline
+        sock.settimeout(self._POLL)
+
+    def recv_into(self, buf, nbytes: int = 0, flags: int = 0):
+        while True:
+            self._token.check()
+            if time.monotonic() > self._deadline:
+                raise TimeoutError("timed out")
+            try:
+                return self._s.recv_into(buf, nbytes, flags)
+            except (socket.timeout, TimeoutError):
+                continue
+
+    def makefile(self, mode="rb", buffering=None, **kw):
+        self._s._io_refs += 1  # as socket.makefile does, so the real socket stays open until the reader is closed
+        return io.BufferedReader(socket.SocketIO(self, "rb"))
+
+    def gettimeout(self):
+        return None  # SocketIO refuses to read from a socket in non-blocking mode
+
+    def __getattr__(self, name):
+        return getattr(self._s, name)
+
+
 def _post_stoppable(url: str, headers: Dict[str, str], body: Dict[str, Any], timeout: float, who: str, token: Cancel) -> Dict[str, Any]:
     parts = urllib.parse.urlsplit(url)
     conn = http.client.HTTPConnection(parts.hostname, parts.port or 80, timeout=timeout)
     token.watch(lambda: (conn.sock and conn.sock.shutdown(socket.SHUT_RDWR), conn.close()))
     try:
         conn.request("POST", parts.path or "/", json.dumps(body).encode(), headers)
+        if conn.sock is not None:
+            conn.sock = _PollSock(conn.sock, token, time.monotonic() + timeout)
         res = conn.getresponse()
         data = res.read()
         if res.status >= 400:

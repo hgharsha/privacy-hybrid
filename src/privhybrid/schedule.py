@@ -19,6 +19,7 @@ from typing import Any, Callable, Dict, List, Optional
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from . import fsutil
 from . import detect as D
 from . import keystore, pipeline, policy, providers, rag, sealed
 from .accounts import Account
@@ -55,8 +56,8 @@ def _write(path: Path, key: bytes, obj: Any) -> None:
     nonce = secrets.token_bytes(12)
     tmp = path.with_name("." + path.name + ".tmp")
     tmp.write_bytes(nonce + AESGCM(key).encrypt(nonce, json.dumps(obj).encode(), path.name.encode()))
-    tmp.chmod(0o600)
-    os.replace(tmp, path)
+    fsutil.private(tmp, 0o600)
+    fsutil.replace(tmp, path)
 
 
 def _read(path: Path, key: bytes, default: Any) -> Any:
@@ -92,11 +93,12 @@ def enable(acct: Account) -> bytes:
         keystore.put(acct.id, S)
         d = _dir(acct)
         d.mkdir(mode=0o700, exist_ok=True)
+        fsutil.private(d, 0o700)
         state = acct.load("sched.bin", {})
         priv, pub = sealed.new_keypair()
         acct.save("sched.bin", {"priv": base64.b64encode(priv).decode(), "max_seq": state.get("max_seq", 0)})
         (d / "pub.key").write_bytes(pub)
-        (d / "pub.key").chmod(0o600)
+        fsutil.private(d / "pub.key", 0o600)
         _write(d / "defs.s", _file_key(S), {"jobs": [], "next_seq": state.get("max_seq", 0) + 1})
         _write(d / "snap.s", _file_key(S), {})
         publish_policy(acct, S)
@@ -312,7 +314,7 @@ def deposit(acct: Account, S: bytes, result: dict) -> None:
         item = sealed.seal((d / "pub.key").read_bytes(), result, seq, _mac_key(S))
         with open(d / "inbox.jsonl", "a") as fh:
             fh.write(json.dumps(item) + "\n")
-        (d / "inbox.jsonl").chmod(0o600)
+        fsutil.private(d / "inbox.jsonl", 0o600)
 
 
 def collect(acct: Account, S: Optional[bytes]) -> List[dict]:

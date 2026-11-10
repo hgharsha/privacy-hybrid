@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
+from . import fsutil
 from . import filelock
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -97,7 +98,7 @@ class Account:
             tmp = self.folder / f".{name}.{secrets.token_hex(4)}.tmp"
             with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "wb") as fh:  # never world-readable, even briefly
                 fh.write(blob)
-            os.replace(tmp, self.folder / name)
+            fsutil.replace(tmp, self.folder / name)
         return ver
 
     def load(self, name: str, default: Any) -> Any:
@@ -116,11 +117,11 @@ class Store:
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
-        self.root.chmod(0o700)
+        fsutil.private(self.root, 0o700)
         salt_file = self.root / "install_salt"
         if not salt_file.exists():
             salt_file.write_bytes(secrets.token_bytes(16))
-            salt_file.chmod(0o600)
+            fsutil.private(salt_file, 0o600)
         self._salt = salt_file.read_bytes()
         self._sweep_temp()
         self._recover_rekey()
@@ -135,7 +136,7 @@ class Store:
                 folder, backup = self.root / uid, self.root / f"{uid}.bak"
                 if backup.exists():
                     shutil.rmtree(folder, ignore_errors=True)
-                    os.replace(backup, folder)
+                    fsutil.replace(backup, folder)
                 marker.unlink(missing_ok=True)
 
     def _store_lock(self):
@@ -171,7 +172,7 @@ class Store:
         tmp = self.root / f".access.{secrets.token_hex(4)}.tmp"
         with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as fh:
             json.dump(data, fh)
-        os.replace(tmp, self._access_file)
+        fsutil.replace(tmp, self._access_file)
 
     def _migrate_access(self) -> None:
         """Accounts that existed before permissions keep everything they could do (a record is written so the administrator can see and change it).
@@ -257,7 +258,7 @@ class Store:
         tmp = self.root / f".admin.{secrets.token_hex(4)}.tmp"
         with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as fh:
             fh.write(uid)
-        os.replace(tmp, self.root / "admin")
+        fsutil.replace(tmp, self.root / "admin")
 
     def transfer_admin(self, acct: "Account", password: str, to_email: str) -> None:
         """The check, both permission records and the administrator file change in one step under the store lock, so two simultaneous transfers
@@ -351,9 +352,10 @@ class Store:
             if not first:
                 self.admin_id()  # fixes the owner before another account exists
             folder.mkdir(mode=0o700)
+            fsutil.private(folder, 0o700)
             meta = folder / "meta.json"
             meta.write_text(json.dumps({"salt": base64.b64encode(salt).decode(), "verifier": base64.b64encode(verifier).decode(), "created": time.time(), "kdf": {k: SCRYPT[k] for k in ("n", "r", "p")}}))
-            meta.chmod(0o600)
+            fsutil.private(meta, 0o600)
             if first:
                 self._write_admin(uid)
             with self._store_lock():
@@ -414,10 +416,10 @@ class Store:
                 tmp = acct.folder / f".meta.{secrets.token_hex(4)}.tmp"
                 with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as fh:
                     fh.write(json.dumps({"salt": base64.b64encode(salt).decode(), "verifier": base64.b64encode(verifier).decode(), "created": created, "kdf": {k: SCRYPT[k] for k in ("n", "r", "p")}}))
-                os.replace(tmp, acct.folder / "meta.json")  # the commit point
+                fsutil.replace(tmp, acct.folder / "meta.json")  # the commit point
             except Exception:
                 shutil.rmtree(acct.folder, ignore_errors=True)
-                os.replace(backup, acct.folder)  # roll back
+                fsutil.replace(backup, acct.folder)  # roll back
                 marker.unlink(missing_ok=True)
                 raise
             marker.unlink(missing_ok=True)

@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Dict, Iterator, List, Optional
 from urllib.parse import urlparse
 
+from . import fsutil
 from . import detect as D
 from . import config, filelock, providers
 from .vault import NeedsApproval, PH_RE, Vault
@@ -144,11 +145,12 @@ class AuditLog:
             return
         with self._lock:
             os.makedirs(os.path.dirname(self.path) or ".", mode=0o700, exist_ok=True)
+            fsutil.private(os.path.dirname(self.path) or ".", 0o700)
             with filelock.locked(self.path + ".lock"):
                 prev = self._last_hash()
                 try:
                     if os.path.getsize(self.path) >= AUDIT_MAX_BYTES:
-                        os.replace(self.path, f"{self.path}.{time.time_ns()}")  # archive keeps its 0600 mode; the new file's first line names the hash of the archive's last line
+                        fsutil.replace(self.path, f"{self.path}.{time.time_ns()}")  # archive keeps its 0600 mode; the new file's first line names the hash of the archive's last line
                         self._prune()
                 except OSError:
                     pass

@@ -48,7 +48,7 @@ Add `samples/maria_statement.txt` (fake; on the Mac, or save its text as a .txt 
 - I. Send two questions quickly: the second shows "queued…" then runs. Enter sends, Shift+Enter adds a line.
 
 ## Automated testing
-- **Unit/integration (no Ollama needed, fake data):** `.venv/bin/python -m pytest -q` (189 tests: detectors, vault, egress, corpus, pipeline, server, accounts).
+- **Unit/integration (no Ollama needed, fake data):** `.venv/bin/python -m pytest -q` (about 650 tests: detectors, vault, egress, corpus, pipeline, server, accounts).
 - **One command, includes leak checks on logs/state and LAN-bind check:** `sh scripts/verify.sh`.
 - **Live check with the real local model and Claude CLI:** `PYTHONPATH=src .venv/bin/python scripts/live_e2e.py` and `scripts/live_claude_check.py`.
 - **Everything in one go (unit tests + isolated server + 26 browser checks + report):** `PW=<path to playwright-core/index.mjs> sh scripts/run_e2e.sh` writes `E2E-REPORT.md`. Needs Ollama, Chrome. Uses a temp data dir, config and audit log.

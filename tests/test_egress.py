@@ -1,3 +1,4 @@
+import os
 import hashlib
 import json
 import socket
@@ -129,10 +130,11 @@ def test_every_outbound_call_site_is_in_known_files():
     import re
     src = pathlib.Path(egress.__file__).parent
     pattern = re.compile(r"urlopen|subprocess\.|socket\.create_connection|requests\.|httpx\.|http\.client")
-    offenders = {p.name for p in src.glob("*.py") if pattern.search(p.read_text())}
-    assert offenders <= {"providers.py", "egress.py", "lockdown.py"}, offenders  # lockdown.py only starts /usr/bin/osascript (no network), reviewed as T6-exempt
+    offenders = {p.name for p in src.glob("*.py") if pattern.search(p.read_text(encoding="utf-8"))}
+    assert offenders <= {"providers.py", "egress.py", "lockdown.py", "fsutil.py"}, offenders  # lockdown.py only starts /usr/bin/osascript, fsutil.py only runs icacls on Windows (no network), reviewed as T6-exempt
 
 
+@pytest.mark.skipif(os.name == "nt", reason="mode bits do not exist on Windows; see test_windows_acl")
 def test_log_dir_is_private(tmp_path):
     log = egress.AuditLog(str(tmp_path / "logs" / "audit.jsonl"))
     log.write(route="local")
@@ -154,6 +156,7 @@ def test_audit_log_chain_shows_an_edited_line(tmp_path):
     assert egress.verify_chain(str(path)) == 2
 
 
+@pytest.mark.skipif(os.name == "nt", reason="mode bits do not exist on Windows; see test_windows_acl")
 def test_audit_log_rotates_and_keeps_the_chain(tmp_path, monkeypatch):
     path = tmp_path / "logs" / "audit.jsonl"
     monkeypatch.setattr(egress, "AUDIT_MAX_BYTES", 300)
@@ -181,6 +184,6 @@ def test_refused_connection_is_unreachable_with_and_without_a_cancel_token():
         providers.ACTIVE.cancel = token
         try:
             with pytest.raises(providers.Unreachable):
-                providers._post(url, {}, {}, 2, "Ollama")
+                providers._post(url, {}, {}, 10, "Ollama")  # Windows reports a refused loopback connect after about 2s
         finally:
             providers.ACTIVE.cancel = None

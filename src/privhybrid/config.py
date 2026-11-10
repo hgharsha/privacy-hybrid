@@ -5,6 +5,7 @@ private network such as another Mac or a Linux box; egress enforces that and all
 Env: PRIVHYBRID_ANSWER_MODEL, PRIVHYBRID_CHECK_MODEL, PRIVHYBRID_SUMMARY_MODEL, PRIVHYBRID_QUERY_MODEL, PRIVHYBRID_EMBED_MODEL,
 PRIVHYBRID_OLLAMA_URL, PRIVHYBRID_OLLAMA_BACKUPS (comma separated).
 """
+from . import fsutil
 import ipaddress
 import json
 import os
@@ -323,5 +324,5 @@ def save(values: dict) -> None:
     CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
     tmp = CONFIG_FILE.with_suffix(".tmp")
     tmp.write_text(json.dumps(cfg, indent=2))
-    os.replace(tmp, CONFIG_FILE)
+    fsutil.replace(tmp, CONFIG_FILE)
     after()

@@ -1,3 +1,4 @@
+import os
 import base64
 import json
 import threading
@@ -507,6 +508,7 @@ def test_metrics_include_latency_and_scheduled_runs():
     assert 'route="?"' not in text  # scheduler events are not requests
 
 
+@pytest.mark.skipif(os.name == "nt", reason="mode bits do not exist on Windows; see test_windows_acl")
 def test_https_mode_serves_over_tls_with_secure_cookie(tmp_path):
     import ssl
     import http.client
@@ -539,6 +541,7 @@ def test_https_mode_serves_over_tls_with_secure_cookie(tmp_path):
         httpd.shutdown()
 
 
+@pytest.mark.skipif(os.name == "nt", reason="mode bits do not exist on Windows; see test_windows_acl")
 def test_audit_log_is_owner_only(tmp_path):
     from privhybrid import egress
     log = egress.AuditLog(str(tmp_path / "logs" / "a.jsonl"))

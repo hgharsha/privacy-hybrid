@@ -1,5 +1,7 @@
 import pytest
 import json
+import os
+import sys
 import importlib.util
 from pathlib import Path
 
@@ -9,6 +11,7 @@ spec.loader.exec_module(inst)
 ROOT = Path("/opt/my apps/privacy-hybrid")
 
 
+@pytest.mark.skipif(os.name == "nt", reason="unit files are generated for POSIX paths")
 def test_systemd_unit_quotes_paths_with_spaces_and_sets_env():
     u = inst.systemd_unit(ROOT, "127.0.0.1", True)
     assert 'ExecStart="/opt/my apps/privacy-hybrid/.venv/bin/python" -m privhybrid.server' in u
@@ -17,6 +20,7 @@ def test_systemd_unit_quotes_paths_with_spaces_and_sets_env():
     assert "PRIVHYBRID_SCHEDULER" not in inst.systemd_unit(ROOT, "127.0.0.1", False)
 
 
+@pytest.mark.skipif(os.name == "nt", reason="unit files are generated for POSIX paths")
 def test_launchd_plist_escapes_and_keeps_alive():
     p = inst.launchd_plist(Path("/Users/a&b/app"), "127.0.0.1", False, Path("/tmp/x.log"))
     assert "/Users/a&amp;b/app/.venv/bin/python" in p and "<key>KeepAlive</key><true/>" in p and "RunAtLoad" in p
@@ -71,6 +75,7 @@ def test_icon_is_wired_into_mac_app_and_desktop_entry():
     assert "Icon=" not in inst.desktop_entry("http://127.0.0.1:8765/")
 
 
+@pytest.mark.skipif(os.name == "nt", reason="unit files are generated for POSIX paths")
 def test_tls_flag_sets_env_dir_only_when_asked():
     assert "PRIVHYBRID_TLS_DIR" not in inst.env_for(Path("/r"), "127.0.0.1", False)
     assert inst.env_for(Path("/r"), "127.0.0.1", False, tls=True)["PRIVHYBRID_TLS_DIR"] == "/r/state/tls"
